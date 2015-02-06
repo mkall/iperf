@@ -321,6 +321,7 @@ server_timer_proc(TimerClientData client_data, struct timeval *nowP)
     if (test->done)
         return;
     test->done = 1;
+    iperf_err(test, "Test has exceeded expected duration. Forcibly closing it.\n", version);
     close(test->ctrl_sck);
 }
 
@@ -360,8 +361,10 @@ create_server_timers(struct iperf_test * test)
     cd.p = test;
     test->timer = test->stats_timer = test->reporter_timer = NULL;
     if (test->duration != 0 ) {
+        // Server forcibly closes tests that linger considerably longer that the test duration.
+        // This can happen if a client unexpectedly loses network connectivity.
         test->done = 0;
-        test->timer = tmr_create(&now, server_timer_proc, cd, (test->duration + test->omit + 5) * SEC_TO_US, 0);
+        test->timer = tmr_create(&now, server_timer_proc, cd, (test->duration + test->omit + SERVER_FORCE_CLOSE_TIMEOUT_SECONDS) * SEC_TO_US, 0);
         if (test->timer == NULL) {
             i_errno = IEINITTEST;
             return -1;

@@ -315,4 +315,7 @@ struct iperf_test
 #define MAX_MSS (9 * 1024)
 #define MAX_STREAMS 128
 
+/* How many seconds does the server allow a test to exceed test duration before forcibly closing it. */
+#define SERVER_FORCE_CLOSE_TIMEOUT_SECONDS 5
+
 #endif /* !__IPERF_H */
