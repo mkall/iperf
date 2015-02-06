@@ -55,6 +55,7 @@
 #include <sched.h>
 #include <setjmp.h>
 #include <stdarg.h>
+#include <dirent.h>
 
 #if defined(HAVE_CPUSET_SETAFFINITY)
 #include <sys/param.h>
@@ -2570,8 +2571,19 @@ iperf_new_stream(struct iperf_test *test, int s)
 {
     int i;
     struct iperf_stream *sp;
-    char template[] = "/tmp/iperf3.XXXXXX";
-
+    char tmp_dir[] = "/tmp";
+    char template[64];
+	
+    DIR* dir = opendir(tmp_dir);
+    if( dir ) 
+    {
+        // Found *nix-type temp directory. Use that.
+        closedir(dir);
+        sprintf(template, "/tmp/iperf3.XXXXXX");
+    } else {
+        // Non-*nix based operating system, fall back to working directory
+        sprintf(template, "./iperf3.XXXXXX");
+    }
     h_errno = 0;
 
     sp = (struct iperf_stream *) malloc(sizeof(struct iperf_stream));
