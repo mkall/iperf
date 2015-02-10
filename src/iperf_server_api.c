@@ -318,8 +318,7 @@ server_timer_proc(TimerClientData client_data, struct timeval *nowP)
     struct iperf_test *test = client_data.p;
 
     test->timer = NULL;
-    if (test->done)
-        return;
+    
     test->done = 1;
     iperf_err(test, "Test has exceeded expected duration. Forcibly closing it.\n", version);
     close(test->ctrl_sck);
