@@ -116,6 +116,25 @@ main(int argc, char **argv)
     return 0;
 }
 
+// Custom signal handler for SIGPIPE
+void iperf_sigpipe_handler(int signum) {
+    fprintf(stderr, "received SIGPIPE signal.\n");
+}
+
+// Default behaviour for SIGPIPE signal is to terminate the process. For server mode
+// this is not desired behaviour. This will set a custom signal handler that just prints
+// the information to user.
+int setup_signal_handler(struct iperf_test *test)
+{
+    struct sigaction action = {};
+    action.sa_handler = &iperf_sigpipe_handler;
+    if( sigaction(SIGPIPE, &action, NULL) != 0 )
+    {
+        iperf_err(test, "warning - failed to set up SIGPIPE signal handler - %s", iperf_strerror(i_errno));
+		// No need to terminate because of that.
+    }
+}
+
 /**************************************************************************/
 static int
 run(struct iperf_test *test)
@@ -136,6 +155,7 @@ run(struct iperf_test *test)
 		i_errno = IEPIDFILE;
 		iperf_errexit(test, "error - %s", iperf_strerror(i_errno));
 	    }
+	    setup_signal_handler(test);
             for (;;) {
 		if (iperf_run_server(test) < 0) {
 		    iperf_err(test, "error - %s", iperf_strerror(i_errno));
